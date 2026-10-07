@@ -1,0 +1,16 @@
+open/
+data/*
+!data/.gitkeep
+.env*
+!.env.example
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+*.sqlite3
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db
