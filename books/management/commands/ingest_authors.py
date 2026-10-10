@@ -6,46 +6,8 @@ import time
 import logging
 from datetime import datetime , timezone
 from books.models import Author
+from books.ingest_utils import write_checkpoint , parse_ts , read_checkpoint
 
-logger = logging.getLogger(__name__)
-
-def parse_ts(value):
-    dt = datetime.fromisoformat(value)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
-
-def read_checkpoint(path):
-    try:
-        with open(path) as f:
-            return int(f.read().strip())
-    except (FileNotFoundError, ValueError):
-        return 0
-
-
-def write_checkpoint(path, line_number , retries = 5 , base_delay = 0.1):
-    tmp = path + ".tmp"
-    with open(tmp, "w") as f:
-        f.write(str(line_number))
-
-    for attempt in range(retries):
-        try:
-            os.replace(tmp, path)
-            return True
-        except PermissionError:
-            if attempt < retries - 1:
-                time.sleep(base_delay * (2 ** attempt))
-
-    logger.warning(
-        "Could not update checkpoint at line %s after %s attempts. Continuing.",
-        line_number, retries,
-    )
-    try : 
-        os.remove(tmp)
-    except OSError : 
-        pass
-    return False
-    
 
 
 class Command(BaseCommand):
@@ -135,7 +97,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f"\n Lines processed : {processed}"
-            f"\n New rrows inserted : {inserted}"
+            f"\n New rows inserted : {inserted}"
             f"\n Parse Failures : {parse_failures}"
             f"\n Skipped : {skipped}"
             f"\n Elapsed : {elapsed:.1f}s"
